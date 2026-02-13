@@ -124,7 +124,7 @@ def main():
         return
 
     print(f"[{chosen['playlist']}] Playing: {chosen['title']}")
-    cmd = ["mpv"]
+    cmd = ["mpv", "--profile=fast"]
     if not args.fullsize:
         cmd.append("--autofit=x384")
     cmd.append(chosen["url"])
