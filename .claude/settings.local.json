@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(uv run drumcode:*)",
+      "Bash(uv run python:*)",
+      "Bash(uv sync)",
+      "Bash(chmod:*)"
+    ]
+  }
+}
