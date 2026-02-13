@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import subprocess
 import sys
 import urllib.request
@@ -42,6 +43,11 @@ def fetch_latest_entry(name, playlist_id):
 
 
 def main():
+    parser = argparse.ArgumentParser(description="Play the latest Drumcode video")
+    parser.add_argument("--info", action="store_true", help="show the latest video info without playing")
+    parser.add_argument("--fullsize", action="store_true", help="play at original resolution instead of 384p height")
+    args = parser.parse_args()
+
     entries = []
     for name, playlist_id in PLAYLISTS.items():
         entry = fetch_latest_entry(name, playlist_id)
@@ -54,8 +60,18 @@ def main():
 
     latest = max(entries, key=lambda e: e["published"])
 
+    if args.info:
+        print(f"[{latest['playlist']}] {latest['title']}")
+        print(f"Published: {latest['published']}")
+        print(f"URL: {latest['url']}")
+        return
+
     print(f"[{latest['playlist']}] Playing: {latest['title']}")
-    subprocess.run(["mpv", "--autofit=x384", latest["url"]])
+    cmd = ["mpv"]
+    if not args.fullsize:
+        cmd.append("--autofit=x384")
+    cmd.append(latest["url"])
+    subprocess.run(cmd)
 
 
 if __name__ == "__main__":

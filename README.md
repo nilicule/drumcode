@@ -18,4 +18,9 @@ Tracks these playlists:
 python drumcode.py
 ```
 
-The script picks the most recently published video across all playlists and opens it in mpv.
+The script picks the most recently published video across all playlists and opens it in mpv at a 384px window height.
+
+### Options
+
+- `--info` - Show the latest video title, date, and URL without playing
+- `--fullsize` - Play at original resolution instead of the default 384p height
