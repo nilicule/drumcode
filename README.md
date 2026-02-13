@@ -23,4 +23,5 @@ The script picks the most recently published video across all playlists and open
 ### Options
 
 - `--info` - Show the latest video title, date, and URL without playing
+- `--pick` - Interactively pick from the latest video of each playlist using arrow keys
 - `--fullsize` - Play at original resolution instead of the default 384p height
