@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import random
 import subprocess
 import sys
 import urllib.request
@@ -17,20 +18,7 @@ PLAYLISTS = {
 NS = {"atom": "http://www.w3.org/2005/Atom"}
 
 
-def fetch_latest_entry(name, playlist_id):
-    url = FEED_URL + playlist_id
-    try:
-        with urllib.request.urlopen(url) as response:
-            feed_xml = response.read()
-    except urllib.error.URLError as e:
-        print(f"Failed to fetch {name}: {e}", file=sys.stderr)
-        return None
-
-    root = ET.fromstring(feed_xml)
-    entry = root.find("atom:entry", NS)
-    if entry is None:
-        return None
-
+def parse_entry(entry, name):
     title = entry.findtext("atom:title", default="Unknown", namespaces=NS)
     published = entry.findtext("atom:published", default="", namespaces=NS)
     link = entry.find("atom:link", NS)
@@ -40,6 +28,33 @@ def fetch_latest_entry(name, playlist_id):
         return None
 
     return {"title": title, "published": published, "url": video_url, "playlist": name}
+
+
+def fetch_entries(name, playlist_id, all_entries=False):
+    url = FEED_URL + playlist_id
+    try:
+        with urllib.request.urlopen(url) as response:
+            feed_xml = response.read()
+    except urllib.error.URLError as e:
+        print(f"Failed to fetch {name}: {e}", file=sys.stderr)
+        return []
+
+    root = ET.fromstring(feed_xml)
+
+    if all_entries:
+        results = []
+        for entry in root.findall("atom:entry", NS):
+            parsed = parse_entry(entry, name)
+            if parsed:
+                results.append(parsed)
+        return results
+
+    entry = root.find("atom:entry", NS)
+    if entry is None:
+        return []
+
+    parsed = parse_entry(entry, name)
+    return [parsed] if parsed else []
 
 
 def pick_entry(entries):
@@ -95,14 +110,13 @@ def main():
     parser = argparse.ArgumentParser(description="Play the latest Drumcode video")
     parser.add_argument("--info", action="store_true", help="show the latest video info without playing")
     parser.add_argument("--pick", action="store_true", help="pick from the 3 latest sets interactively")
+    parser.add_argument("--random", action="store_true", help="play a random video from the playlists")
     parser.add_argument("--fullsize", action="store_true", help="play at original resolution instead of 384p height")
     args = parser.parse_args()
 
     entries = []
     for name, playlist_id in PLAYLISTS.items():
-        entry = fetch_latest_entry(name, playlist_id)
-        if entry:
-            entries.append(entry)
+        entries.extend(fetch_entries(name, playlist_id, all_entries=args.random))
 
     if not entries:
         print("No videos found in any playlist.", file=sys.stderr)
@@ -110,7 +124,9 @@ def main():
 
     entries.sort(key=lambda e: e["published"], reverse=True)
 
-    if args.pick:
+    if args.random:
+        chosen = random.choice(entries)
+    elif args.pick:
         top = entries[:3]
         print("Pick a set:")
         chosen = pick_entry(top)
